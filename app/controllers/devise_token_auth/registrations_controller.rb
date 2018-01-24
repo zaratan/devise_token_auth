@@ -16,24 +16,6 @@ module DeviseTokenAuth
         @resource.email = sign_up_params[:email]
       end
 
-      # give redirect value from params priority
-      @redirect_url = sign_up_params[:confirm_success_url]
-
-      # fall back to default value if provided
-      @redirect_url ||= DeviseTokenAuth.default_confirm_success_url
-
-      # success redirect url is required
-      if confirmable_enabled? && !@redirect_url
-        return render_create_error_missing_confirm_success_url
-      end
-
-      # if whitelist is set, validate redirect_url against whitelist
-      if DeviseTokenAuth.redirect_whitelist
-        unless DeviseTokenAuth::Url.whitelisted?(@redirect_url)
-          return render_create_error_redirect_url_not_allowed
-        end
-      end
-
       begin
         # override email confirmation, must be sent manually from ctrl
         resource_class.set_callback("create", :after, :send_on_create_confirmation_instructions)
@@ -49,7 +31,6 @@ module DeviseTokenAuth
             # user will require email authentication
             @resource.send_confirmation_instructions({
               client_config: params[:config_name],
-              redirect_url: @redirect_url
             })
 
           else
