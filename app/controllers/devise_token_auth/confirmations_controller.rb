@@ -1,11 +1,11 @@
 module DeviseTokenAuth
   class ConfirmationsController < DeviseTokenAuth::ApplicationController
-    before_action :set_user_by_token, :only => [:create]
+    before_action :set_user_by_token, only: [:create]
 
     def show
       @resource = resource_class.confirm_by_token(params[:confirmation_token])
 
-      if @resource && @resource.id
+      if @resource && @resource.id && @resource.errors.empty?
         expiry = nil
         if defined?(@resource.sign_in_count) && @resource.sign_in_count > 0
           expiry = (Time.now + 1.second).to_i
@@ -13,16 +13,16 @@ module DeviseTokenAuth
 
         client_id, token = @resource.create_token expiry: expiry
 
-        sign_in(@resource)
         @resource.save!
+        sign_in(@resource)
 
         yield @resource if block_given?
 
         render json: {
-          data: {}
+          data: resource_data(resource_json: @resource.token_validation_response)
         }
       else
-        raise ActionController::RoutingError.new('Not Found')
+        raise ActionController::RoutingError, 'Not Found'
       end
     end
 
@@ -40,6 +40,5 @@ module DeviseTokenAuth
     def render_error_unauthorized
       render_error(401, 'Unauthorized')
     end
-
   end
 end
