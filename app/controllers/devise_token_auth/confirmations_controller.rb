@@ -1,5 +1,7 @@
 module DeviseTokenAuth
   class ConfirmationsController < DeviseTokenAuth::ApplicationController
+    before_action :set_user_by_token, :only => [:create]
+
     def show
       @resource = resource_class.confirm_by_token(params[:confirmation_token])
 
@@ -23,5 +25,21 @@ module DeviseTokenAuth
         raise ActionController::RoutingError.new('Not Found')
       end
     end
+
+    def create
+      return render_error_unauthorized unless @resource
+
+      # make sure account doesn't use oauth2 provider
+      return render_error_unauthorized unless @resource.provider == 'email'
+
+      @resource.send_confirmation_instructions
+
+      render json: { data: {} }
+    end
+
+    def render_error_unauthorized
+      render_error(401, 'Unauthorized')
+    end
+
   end
 end
