@@ -33,14 +33,14 @@ module DeviseTokenAuth
               client_config: params[:config_name],
             })
 
-          else
-            # email auth has been bypassed, authenticate user
-            @client_id, @token = @resource.create_token
-
-            @resource.save!
-
-            update_auth_header
           end
+
+          # email auth has been bypassed, authenticate user
+          @client_id, @token = @resource.create_token
+
+          @resource.save!
+
+          update_auth_header
           render_create_success
         else
           clean_up_passwords @resource
