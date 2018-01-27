@@ -29,7 +29,7 @@ module DeviseTokenAuth
       @resource = with_reset_password_token(resource_params[:reset_password_token])
 
       if @resource && @resource.reset_password_period_valid?
-        client_id, token = @resource.create_token
+        @client_id, @token = @resource.create_token
 
         # ensure that user is confirmed
         @resource.skip_confirmation! if confirmable_enabled? && !@resource.confirmed_at
@@ -47,7 +47,7 @@ module DeviseTokenAuth
           @resource.save!
 
           yield @resource if block_given?
-
+          update_auth_header
           render json: {
             data: resource_data(resource_json: @resource.token_validation_response)
           }
